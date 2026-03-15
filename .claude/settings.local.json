@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git remote:*)",
+      "Bash(git init:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(which node:*)",
+      "Bash(\"/c/Program Files/nodejs/node\" --version)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/prana/AppData/Roaming/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Users/prana/**)",
+      "Bash(cmd.exe /c \"where node\" 2>&1)"
+    ]
+  }
+}

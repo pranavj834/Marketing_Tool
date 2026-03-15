@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarketMind — AI Marketing Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ── Base ──────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body { background: #F1F5F9; }
+
+    /* ── Nav ───────────────────────────────────────────────────────────────── */
+    .nav-logo-mark {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; color: white; letter-spacing: -1px;
+    }
+
+    /* ── Hero gradient text ────────────────────────────────────────────────── */
+    .gradient-text {
+      background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Feature tag input ─────────────────────────────────────────────────── */
+    .feature-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE;
+      border-radius: 20px; padding: 4px 10px 4px 12px;
+      font-size: 13px; font-weight: 500;
+    }
+    .feature-tag button {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #C7D2FE; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #4338CA; line-height: 1;
+      transition: background 0.15s;
+    }
+    .feature-tag button:hover { background: #A5B4FC; }
+
+    /* ── Price tier selector ───────────────────────────────────────────────── */
+    .tier-btn {
+      flex: 1; padding: 8px 12px; border: 1.5px solid #E2E8F0;
+      border-radius: 8px; background: white; color: #64748B;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .tier-btn.selected {
+      border-color: #6366F1; background: #EEF2FF; color: #4338CA;
+    }
+    .tier-btn:hover:not(.selected) { border-color: #A5B4FC; color: #6366F1; }
+
+    /* ── Primary button ────────────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: white; border: none; border-radius: 12px;
+      padding: 14px 28px; font-size: 16px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Loading spinner ───────────────────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 4px solid #E2E8F0;
+      border-top-color: #6366F1;
+      animation: spin 0.9s linear infinite;
+    }
+
+    /* ── Loading steps ─────────────────────────────────────────────────────── */
+    .loading-step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      background: white; border: 1.5px solid #E2E8F0;
+      transition: all 0.3s; color: #94A3B8;
+    }
+    .loading-step.active {
+      border-color: #A5B4FC; background: #EEF2FF;
+      color: #4338CA;
+    }
+    .loading-step.done {
+      border-color: #6EE7B7; background: #ECFDF5; color: #059669;
+    }
+    .step-icon { font-size: 20px; width: 28px; text-align: center; }
+    .step-text { flex: 1; font-size: 14px; font-weight: 500; }
+    .step-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #D1FAE5; color: #059669;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .loading-step.done .step-check { opacity: 1; }
+    .step-pulse {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #6366F1; opacity: 0;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    .loading-step.active .step-pulse { opacity: 1; }
+    @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+    /* ── Segment cards ─────────────────────────────────────────────────────── */
+    .segment-card {
+      background: white; border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.07);
+      display: flex; flex-direction: column;
+      transition: box-shadow 0.2s;
+    }
+    .segment-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 12px 32px rgba(0,0,0,.1);
+    }
+    .card-section {
+      padding: 16px 20px; border-top: 1px solid #F1F5F9;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+      color: #94A3B8; text-transform: uppercase; margin-bottom: 10px;
+    }
+
+    /* ── Fit score bar ─────────────────────────────────────────────────────── */
+    .fit-bar-track {
+      height: 5px; background: #E2E8F0; border-radius: 3px; overflow: hidden;
+      margin-top: 10px;
+    }
+    .fit-bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* ── Tags ──────────────────────────────────────────────────────────────── */
+    .tag {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 12px; font-weight: 500;
+    }
+    .role-tag {
+      display: inline-block; padding: 4px 10px;
+      background: #F1F5F9; color: #475569; border-radius: 6px;
+      font-size: 12px; font-weight: 500; margin: 2px;
+    }
+    .channel-tag {
+      display: inline-block; padding: 5px 12px;
+      background: #F8FAFC; color: #475569;
+      border: 1px solid #E2E8F0; border-radius: 20px;
+      font-size: 12px; font-weight: 500; margin: 2px;
+    }
+
+    /* ── Message box ───────────────────────────────────────────────────────── */
+    .message-box {
+      background: #F8FAFC; border-radius: 12px;
+      padding: 16px 18px; border-left-width: 4px; border-left-style: solid;
+    }
+    .message-headline {
+      font-size: 18px; font-weight: 800; color: #0F172A;
+      line-height: 1.3; margin-bottom: 4px;
+    }
+    .message-sub {
+      font-size: 13px; font-weight: 500; color: #64748B; margin-bottom: 10px;
+    }
+    .message-body {
+      font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 14px;
+    }
+    .cta-pill {
+      display: inline-block; padding: 7px 16px; border-radius: 20px;
+      color: white; font-size: 13px; font-weight: 600;
+    }
+    .tone-label {
+      font-size: 11px; color: #94A3B8; font-weight: 500;
+    }
+
+    /* ── Copy button ───────────────────────────────────────────────────────── */
+    .copy-btn {
+      width: 100%; padding: 9px; border-radius: 8px;
+      background: white; border: 1.5px solid #E2E8F0;
+      color: #64748B; font-size: 13px; font-weight: 500;
+      cursor: pointer; margin-top: 10px;
+      transition: all 0.15s; display: flex; align-items: center;
+      justify-content: center; gap: 6px;
+    }
+    .copy-btn:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .copy-btn.copied { background: #ECFDF5; border-color: #6EE7B7; color: #059669; }
+
+    /* ── Urgency bar ───────────────────────────────────────────────────────── */
+    .urgency-strip {
+      padding: 12px 20px; display: flex; align-items: flex-start;
+      gap: 10px; font-size: 13px; color: #334155;
+    }
+
+    /* ── Overview cards ────────────────────────────────────────────────────── */
+    .overview-card {
+      background: white; border-radius: 12px; padding: 20px 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+
+    /* ── Toast error ───────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+      background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;
+      border-radius: 10px; padding: 12px 20px; font-size: 14px; font-weight: 500;
+      z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,.12);
+      max-width: 480px; width: calc(100% - 32px); text-align: center;
+      animation: slideDown 0.25s ease;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } }
+
+    /* ── Field error ───────────────────────────────────────────────────────── */
+    .field-error {
+      font-size: 12px; color: #EF4444; margin-top: 4px; font-weight: 500;
+    }
+
+    /* ── Responsive grid ───────────────────────────────────────────────────── */
+    .segments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+      gap: 20px;
+    }
+    @media (max-width: 520px) {
+      .segments-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Secondary button ──────────────────────────────────────────────────── */
+    .btn-secondary {
+      padding: 9px 18px; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; color: #475569; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: #CBD5E1; background: #F8FAFC; }
+
+    /* View transition */
+    .view { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } }
+  </style>
+</head>
+
+<body class="font-sans min-h-screen">
+
+  <!-- ── Navigation ────────────────────────────────────────────────────────── -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="nav-logo-mark">M</div>
+        <div>
+          <span class="text-slate-900 font-800 text-[15px] font-extrabold tracking-tight">MarketMind</span>
+          <span class="hidden sm:inline text-slate-400 text-xs ml-2 font-normal">AI Marketing Intelligence</span>
+        </div>
+      </div>
+      <div id="nav-actions" class="hidden items-center gap-2">
+        <button class="btn-secondary text-sm" onclick="newAnalysis()">+ New Analysis</button>
+        <button class="btn-secondary text-sm" onclick="exportReport()">↓ Export</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Global error toast ────────────────────────────────────────────────── -->
+  <div id="global-error" class="toast hidden"></div>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         INPUT VIEW
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <section id="input-view" class="view">
+
+      <!-- Hero text -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-semibold px-3 py-1.5 rounded-full mb-4 border border-indigo-100">
+          <span>✦</span> Powered by Claude AI
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-3">
+          Turn Product Features Into<br>
+          <span class="gradient-text">Market-Ready Messaging</span>
+        </h1>
+        <p class="text-slate-500 text-lg max-w-xl mx-auto">
+          Paste your product details — get instant target audience segments,
+          company profiles, and tailored copy that converts.
+        </p>
+      </div>
+
+      <!-- Value props -->
+      <div class="flex flex-wrap justify-center gap-4 mb-10">
+        <div class="flex items-center gap-2 text-sm text-slate-600 bg-white rounded-full px-4 py-2 border border-slate-200">
+          <span class="text-indigo-500">◎</span> 3–5 audience segments
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-600 bg-white rounded-full px-4 py-2 border border-slate-200">
+          <span class="text-violet-500">◎</span> Pain points &amp; decision makers
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-600 bg-white rounded-full px-4 py-2 border border-slate-200">
+          <span class="text-pink-500">◎</span> Ready-to-use marketing copy
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-600 bg-white rounded-full px-4 py-2 border border-slate-200">
+          <span class="text-emerald-500">◎</span> GTM strategy & channel mix
+        </div>
+      </div>
+
+      <!-- Form card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 max-w-2xl mx-auto">
+
+        <!-- Product Name -->
+        <div class="mb-5">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+            Product Name <span class="text-red-400">*</span>
+          </label>
+          <input
+            id="product-name"
+            type="text"
+            placeholder="e.g., Acme DevOps Suite"
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 placeholder:text-slate-400 transition"
+          />
+          <div id="product-name-error" class="field-error hidden"></div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-5">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+            Product Description <span class="text-red-400">*</span>
+          </label>
+          <textarea
+            id="description"
+            rows="4"
+            placeholder="Describe what your product does, the problem it solves, and who it's for. The more detail you provide, the sharper the analysis."
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-[15px] focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 placeholder:text-slate-400 transition resize-none"
+          ></textarea>
+          <div id="description-error" class="field-error hidden"></div>
+        </div>
+
+        <!-- Features -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-semibold text-slate-700">
+              Key Features
+              <span class="text-slate-400 font-normal ml-1">(optional but recommended)</span>
+            </label>
+            <span id="feature-count" class="text-xs text-slate-400 font-medium">0/15</span>
+          </div>
+
+          <!-- Tag display -->
+          <div id="feature-tags" class="flex flex-wrap gap-2 mb-2 empty:hidden min-h-[0]"></div>
+
+          <!-- Tag input -->
+          <div class="flex gap-2">
+            <input
+              id="feature-input"
+              type="text"
+              placeholder="Type a feature and press Enter..."
+              class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 placeholder:text-slate-400 transition"
+            />
+            <button
+              onclick="addFeatureFromInput()"
+              class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-semibold text-sm transition border border-slate-200"
+            >
+              + Add
+            </button>
+          </div>
+          <p class="text-xs text-slate-400 mt-1.5">
+            e.g., Real-time analytics, SSO / SAML, REST API, 99.9% uptime SLA
+          </p>
+        </div>
+
+        <!-- Price tier -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-slate-700 mb-2">
+            Price Tier
+            <span class="text-slate-400 font-normal ml-1">(optional)</span>
+          </label>
+          <div class="flex gap-2" id="tier-buttons">
+            <button class="tier-btn" data-value="Free / Freemium" onclick="selectTier(this)">Free / Freemium</button>
+            <button class="tier-btn" data-value="SMB ($50–$500/mo)" onclick="selectTier(this)">SMB</button>
+            <button class="tier-btn" data-value="Mid-market ($500–$5k/mo)" onclick="selectTier(this)">Mid-market</button>
+            <button class="tier-btn" data-value="Enterprise ($5k+/mo)" onclick="selectTier(this)">Enterprise</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button id="analyze-btn" class="btn-primary w-full justify-center" onclick="analyzeProduct()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Analyze Market
+        </button>
+
+        <p class="text-center text-xs text-slate-400 mt-3">
+          Analysis takes ~15–30 seconds. Powered by Claude claude-opus-4-6.
+        </p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         LOADING VIEW
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <section id="loading-view" class="hidden view">
+      <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div class="spinner mb-6"></div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-1">Analyzing Your Market</h2>
+        <p class="text-slate-500 text-sm mb-8">Claude is profiling your target segments and crafting messaging…</p>
+
+        <div id="loading-steps" class="flex flex-col gap-3 w-full max-w-md text-left"></div>
+
+        <p class="mt-8 text-xs text-slate-400">Typically takes 15–30 seconds</p>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         RESULTS VIEW
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    <section id="results-view" class="hidden view">
+
+      <!-- Results header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide">Analysis complete</span>
+          </div>
+          <h2 class="text-2xl font-extrabold text-slate-900">
+            <span id="results-product-name"></span>
+          </h2>
+          <p class="text-slate-500 text-sm mt-0.5">
+            <span id="segment-count" class="font-semibold text-indigo-600">0</span> target segments identified
+          </p>
+        </div>
+      </div>
+
+      <!-- Strategy overview -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="overview-card border-l-4 border-indigo-400">
+          <p class="section-label">Product Summary</p>
+          <p id="product-summary" class="text-slate-700 text-sm leading-relaxed"></p>
+        </div>
+        <div class="overview-card border-l-4 border-violet-400">
+          <p class="section-label">Go-to-Market Strategy</p>
+          <p id="overall-strategy" class="text-slate-700 text-sm leading-relaxed"></p>
+        </div>
+        <div class="overview-card border-l-4 border-pink-400">
+          <p class="section-label">Competitive Positioning</p>
+          <p id="competitive-positioning" class="text-slate-700 text-sm leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- Segments header -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-slate-800">Target Segments</h3>
+      </div>
+
+      <!-- Segment cards -->
+      <div id="segments-grid" class="segments-grid mb-10"></div>
+
+    </section>
+  </main>
+
+  <script>
+    // ── State ────────────────────────────────────────────────────────────────
+    let currentFeatures = [];
+    let selectedPriceTier = '';
+    let analysisData = null;
+    let currentProductName = '';
+    let loadingTimer = null;
+
+    // ── Segment color palettes ───────────────────────────────────────────────
+    const PALETTES = [
+      { primary: '#4F46E5', light: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' },
+      { primary: '#7C3AED', light: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE' },
+      { primary: '#DB2777', light: '#FDF2F8', text: '#BE185D', border: '#FBCFE8' },
+      { primary: '#D97706', light: '#FFFBEB', text: '#B45309', border: '#FDE68A' },
+      { primary: '#0D9488', light: '#F0FDFA', text: '#0F766E', border: '#99F6E4' },
+    ];
+
+    // ── Loading steps ────────────────────────────────────────────────────────
+    const LOADING_STEPS = [
+      { icon: '🔍', text: 'Parsing product details…' },
+      { icon: '🎯', text: 'Identifying target segments…' },
+      { icon: '🏢', text: 'Profiling company characteristics…' },
+      { icon: '✍️', text: 'Crafting marketing messages…' },
+      { icon: '🚀', text: 'Finalizing go-to-market strategy…' },
+    ];
+
+    // ── Feature tags ─────────────────────────────────────────────────────────
+    function addFeatureFromInput() {
+      const input = document.getElementById('feature-input');
+      const val = input.value.trim();
+      if (!val) return;
+      if (currentFeatures.length >= 15) return;
+      if (currentFeatures.includes(val)) { input.value = ''; return; }
+      currentFeatures.push(val);
+      input.value = '';
+      renderFeatureTags();
+      input.focus();
+    }
+
+    function removeFeature(idx) {
+      currentFeatures.splice(idx, 1);
+      renderFeatureTags();
+    }
+
+    function renderFeatureTags() {
+      const container = document.getElementById('feature-tags');
+      container.innerHTML = currentFeatures.map((f, i) => `
+        <span class="feature-tag">
+          ${esc(f)}
+          <button onclick="removeFeature(${i})" title="Remove">×</button>
+        </span>
+      `).join('');
+      document.getElementById('feature-count').textContent = `${currentFeatures.length}/15`;
+    }
+
+    document.getElementById('feature-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addFeatureFromInput(); }
+    });
+
+    // ── Price tier ───────────────────────────────────────────────────────────
+    function selectTier(btn) {
+      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
+      if (selectedPriceTier === btn.dataset.value) {
+        selectedPriceTier = '';
+      } else {
+        btn.classList.add('selected');
+        selectedPriceTier = btn.dataset.value;
+      }
+    }
+
+    // ── Main analysis ────────────────────────────────────────────────────────
+    async function analyzeProduct() {
+      const productName = document.getElementById('product-name').value.trim();
+      const description = document.getElementById('description').value.trim();
+
+      // Validation
+      let valid = true;
+      if (!productName) {
+        showFieldError('product-name-error', 'Please enter your product name.');
+        valid = false;
+      }
+      if (!description || description.length < 20) {
+        showFieldError('description-error', 'Please provide a more detailed description (at least 20 characters).');
+        valid = false;
+      }
+      if (!valid) return;
+
+      currentProductName = productName;
+      showView('loading');
+      startLoadingAnimation();
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productName,
+            description,
+            features: currentFeatures,
+            priceRange: selectedPriceTier,
+          }),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || json.error || 'Analysis failed. Please try again.');
+        }
+
+        analysisData = json.data;
+        renderResults(json.data, productName);
+        showView('results');
+        document.getElementById('nav-actions').classList.replace('hidden', 'flex');
+      } catch (err) {
+        showView('input');
+        showToast(err.message);
+      } finally {
+        clearTimeout(loadingTimer);
+      }
+    }
+
+    // ── Loading animation ────────────────────────────────────────────────────
+    function startLoadingAnimation() {
+      const container = document.getElementById('loading-steps');
+      container.innerHTML = LOADING_STEPS.map((s, i) => `
+        <div id="lstep-${i}" class="loading-step ${i === 0 ? 'active' : ''}">
+          <span class="step-icon">${s.icon}</span>
+          <span class="step-text">${s.text}</span>
+          <div class="step-pulse"></div>
+          <div class="step-check">✓</div>
+        </div>
+      `).join('');
+
+      let idx = 0;
+      function advance() {
+        const curr = document.getElementById(`lstep-${idx}`);
+        if (curr) { curr.classList.remove('active'); curr.classList.add('done'); }
+        idx++;
+        if (idx < LOADING_STEPS.length) {
+          const next = document.getElementById(`lstep-${idx}`);
+          if (next) next.classList.add('active');
+          loadingTimer = setTimeout(advance, 3500);
+        }
+      }
+      loadingTimer = setTimeout(advance, 3500);
+    }
+
+    // ── Render results ───────────────────────────────────────────────────────
+    function renderResults(data, productName) {
+      document.getElementById('results-product-name').textContent = productName;
+      document.getElementById('product-summary').textContent = data.productSummary || '';
+      document.getElementById('overall-strategy').textContent = data.overallStrategy || '';
+      document.getElementById('competitive-positioning').textContent = data.competitivePositioning || '';
+      document.getElementById('segment-count').textContent = (data.targetSegments || []).length;
+
+      const grid = document.getElementById('segments-grid');
+      grid.innerHTML = (data.targetSegments || [])
+        .map((seg, i) => renderCard(seg, PALETTES[i % PALETTES.length], i))
+        .join('');
+
+      // Animate fit bars after DOM paint
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.fit-bar-fill[data-width]').forEach(el => {
+          el.style.width = el.dataset.width + '%';
+        });
+      });
+    }
+
+    function renderCard(seg, p, idx) {
+      const fit = Math.min(100, Math.max(0, seg.fitScore || 75));
+      const fitColor = fit >= 80 ? '#059669' : fit >= 60 ? '#D97706' : '#EF4444';
+
+      const painHTML = (seg.painPoints || []).map(pt => `
+        <li class="flex gap-2 text-sm text-slate-700 mb-1.5">
+          <span style="color:${p.primary}; flex-shrink:0; margin-top:2px;">●</span>
+          <span>${esc(pt)}</span>
+        </li>`).join('');
+
+      const triggersHTML = (seg.buyingTriggers || []).map(t => `
+        <li class="text-xs text-slate-600 mb-1 flex gap-1.5">
+          <span class="text-amber-500 flex-shrink-0">⚡</span>${esc(t)}
+        </li>`).join('');
+
+      const industryTagsHTML = (seg.companyProfile?.industries || []).map(ind =>
+        `<span class="tag text-xs" style="background:${p.light}; color:${p.text}; border:1px solid ${p.border};">${esc(ind)}</span>`
+      ).join(' ');
+
+      const rolesHTML = (seg.decisionMakers || []).map(r =>
+        `<span class="role-tag">${esc(r)}</span>`
+      ).join('');
+
+      const channelsHTML = (seg.marketing?.channels || []).map(ch =>
+        `<span class="channel-tag">${esc(ch)}</span>`
+      ).join('');
+
+      const msgData = encodeURIComponent(JSON.stringify(seg.marketing || {}));
+
+      return `
+      <div class="segment-card" style="border-top: 4px solid ${p.primary};">
+
+        <!-- Header -->
+        <div style="background:${p.light}; padding:20px 20px 16px;">
+          <div class="flex items-start justify-between mb-2">
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full text-white" style="background:${p.primary};">
+              Segment ${idx + 1}
+            </span>
+            <div class="text-right">
+              <div class="text-[10px] font-700 uppercase tracking-widest" style="color:${p.text}; font-weight:700; letter-spacing:.08em;">FIT SCORE</div>
+              <div class="text-2xl font-black" style="color:${fitColor};">${fit}</div>
+            </div>
+          </div>
+          <h3 class="text-lg font-extrabold mb-0.5" style="color:${p.text};">${esc(seg.name)}</h3>
+          <p class="text-sm text-slate-600 mb-2">${esc(seg.tagline)}</p>
+          <div class="fit-bar-track">
+            <div class="fit-bar-fill" data-width="${fit}" style="width:0%; background:${fitColor};"></div>
+          </div>
+        </div>
+
+        <!-- Company Profile -->
+        <div class="card-section">
+          <p class="section-label">Company Profile</p>
+          <div class="grid grid-cols-3 gap-2 mb-3 text-xs text-slate-600">
+            <div class="bg-slate-50 rounded-lg p-2 text-center">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Size</div>
+              <div class="font-semibold text-slate-700">${esc(seg.companyProfile?.size || '—')}</div>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-2 text-center">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Revenue</div>
+              <div class="font-semibold text-slate-700">${esc(seg.companyProfile?.annualRevenue || '—')}</div>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-2 text-center">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">Stage</div>
+              <div class="font-semibold text-slate-700">${esc(seg.companyProfile?.stage || '—')}</div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1">${industryTagsHTML}</div>
+        </div>
+
+        <!-- Pain Points -->
+        <div class="card-section">
+          <p class="section-label">Pain Points</p>
+          <ul>${painHTML}</ul>
+        </div>
+
+        <!-- Decision Makers + Buying Triggers -->
+        <div class="card-section grid grid-cols-2 gap-4">
+          <div>
+            <p class="section-label">Decision Makers</p>
+            <div>${rolesHTML}</div>
+          </div>
+          <div>
+            <p class="section-label">Buying Triggers</p>
+            <ul>${triggersHTML}</ul>
+          </div>
+        </div>
+
+        <!-- Marketing Message -->
+        <div class="card-section">
+          <div class="flex items-center justify-between mb-2">
+            <p class="section-label mb-0">Marketing Message</p>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full" style="background:${p.light}; color:${p.text};">
+              ${esc(seg.messagingPillar || '')}
+            </span>
+          </div>
+          <div class="message-box" style="border-left-color:${p.primary};">
+            <div class="message-headline">"${esc(seg.marketing?.headline || '')}"</div>
+            <div class="message-sub">${esc(seg.marketing?.subheadline || '')}</div>
+            <div class="message-body">${esc(seg.marketing?.bodyMessage || '')}</div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="cta-pill" style="background:${p.primary};">
+                ${esc(seg.marketing?.callToAction || '')} →
+              </span>
+              <span class="tone-label">Tone: ${esc(seg.marketing?.tone || '')}</span>
+            </div>
+          </div>
+          <button class="copy-btn" onclick="copyMessage(this, '${msgData}')">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy Message
+          </button>
+        </div>
+
+        <!-- Channels -->
+        <div class="card-section">
+          <p class="section-label">Recommended Channels</p>
+          <div class="flex flex-wrap gap-1">${channelsHTML}</div>
+        </div>
+
+        <!-- Urgency -->
+        ${seg.urgencyDriver ? `
+        <div class="urgency-strip" style="background:${p.light}; border-top: 1px solid ${p.border};">
+          <span class="text-lg flex-shrink-0">🔥</span>
+          <div class="text-sm">
+            <span class="font-semibold" style="color:${p.text};">Why act now: </span>
+            <span class="text-slate-600">${esc(seg.urgencyDriver)}</span>
+          </div>
+        </div>` : ''}
+      </div>`;
+    }
+
+    // ── Copy message ─────────────────────────────────────────────────────────
+    function copyMessage(btn, encoded) {
+      const m = JSON.parse(decodeURIComponent(encoded));
+      const text = [
+        `Headline: ${m.headline}`,
+        `Subheadline: ${m.subheadline}`,
+        ``,
+        m.bodyMessage,
+        ``,
+        `CTA: ${m.callToAction}`,
+        `Tone: ${m.tone}`,
+        `Channels: ${(m.channels || []).join(', ')}`,
+      ].join('\n');
+
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Copied!`;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> Copy Message`;
+        }, 2200);
+      }).catch(() => showToast('Could not copy to clipboard.'));
+    }
+
+    // ── Export report ────────────────────────────────────────────────────────
+    function exportReport() {
+      if (!analysisData) return;
+      const d = analysisData;
+      const lines = [
+        `# Market Intelligence Report: ${currentProductName}`,
+        `_Generated: ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })}_`,
+        ``,
+        `## Product Summary`,
+        d.productSummary, ``,
+        `## Go-to-Market Strategy`,
+        d.overallStrategy, ``,
+        `## Competitive Positioning`,
+        d.competitivePositioning, ``,
+        `---`, ``,
+        `## Target Segments`, ``,
+      ];
+
+      (d.targetSegments || []).forEach((seg, i) => {
+        lines.push(`### Segment ${i + 1}: ${seg.name}`);
+        lines.push(`**Fit Score:** ${seg.fitScore}/100 · **Pillar:** ${seg.messagingPillar}`);
+        lines.push(`> ${seg.tagline}`, ``);
+        lines.push(`**Company Profile**`);
+        lines.push(`- Size: ${seg.companyProfile?.size}`);
+        lines.push(`- Revenue: ${seg.companyProfile?.annualRevenue}`);
+        lines.push(`- Stage: ${seg.companyProfile?.stage}`);
+        lines.push(`- Industries: ${(seg.companyProfile?.industries || []).join(', ')}`, ``);
+        lines.push(`**Pain Points**`);
+        (seg.painPoints || []).forEach(p => lines.push(`- ${p}`));
+        lines.push(``, `**Decision Makers:** ${(seg.decisionMakers || []).join(', ')}`);
+        lines.push(``, `**Buying Triggers**`);
+        (seg.buyingTriggers || []).forEach(t => lines.push(`- ⚡ ${t}`));
+        lines.push(``, `**Marketing Message**`);
+        lines.push(`> **"${seg.marketing?.headline}"**`);
+        lines.push(`> ${seg.marketing?.subheadline}`, ``);
+        lines.push(seg.marketing?.bodyMessage, ``);
+        lines.push(`**CTA:** ${seg.marketing?.callToAction}`);
+        lines.push(`**Tone:** ${seg.marketing?.tone}`);
+        lines.push(`**Channels:** ${(seg.marketing?.channels || []).join(', ')}`);
+        if (seg.urgencyDriver) lines.push(``, `🔥 **Why act now:** ${seg.urgencyDriver}`);
+        lines.push(``, `---`, ``);
+      });
+
+      const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentProductName.replace(/\s+/g, '-').toLowerCase()}-market-analysis.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── View switching ───────────────────────────────────────────────────────
+    function showView(name) {
+      ['input', 'loading', 'results'].forEach(v => {
+        const el = document.getElementById(`${v}-view`);
+        if (v === name) { el.classList.remove('hidden'); el.classList.add('view'); }
+        else el.classList.add('hidden');
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function newAnalysis() {
+      clearTimeout(loadingTimer);
+      document.getElementById('nav-actions').classList.replace('flex', 'hidden');
+      showView('input');
+    }
+
+    // ── Error helpers ────────────────────────────────────────────────────────
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('global-error');
+      el.textContent = `⚠ ${msg}`;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 7000);
+    }
+
+    // ── Utility ──────────────────────────────────────────────────────────────
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+    }
+  </script>
+</body>
+</html>
